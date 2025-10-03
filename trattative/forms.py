@@ -2,15 +2,21 @@ from django import forms
 from .models import Trattativa, Commento, Task # Assicurati di importare anche Commento
 
 class TrattativaForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Rendiamo il campo non obbligatorio a livello di form
+        self.fields['responsabile'].required = False
+
     class Meta:
         model = Trattativa
-        fields = ['titolo', 'cliente', 'valore', 'stato', 'responsabile', 'note']
+        fields = ['titolo', 'cliente', 'valore', 'stato', 'responsabile', 'note', 'collaboratori']
         widgets = {
             'titolo': forms.TextInput(attrs={'class': 'form-control'}),
             'cliente': forms.TextInput(attrs={'class': 'form-control'}),
             'valore': forms.NumberInput(attrs={'class': 'form-control'}),
             'stato': forms.Select(attrs={'class': 'form-select'}),
             'responsabile': forms.Select(attrs={'class': 'form-select'}),
+            'collaboratori': forms.SelectMultiple(attrs={'class': 'form-select', 'size': '5'}),
             'note': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
         }
 
@@ -33,7 +39,7 @@ class CommentoForm(forms.ModelForm):
 class TaskForm(forms.ModelForm):
     class Meta:
         model = Task
-        fields = ['titolo', 'trattativa', 'assegnato_a', 'priorita', 'data_scadenza']
+        fields = ['titolo', 'trattativa', 'assegnato_a', 'priorita', 'data_scadenza', 'collaboratori']
 
         # Usiamo un widget HTML5 per il campo data per un'esperienza migliore
         widgets = {
@@ -42,12 +48,14 @@ class TaskForm(forms.ModelForm):
             'trattativa': forms.Select(attrs={'class': 'form-select'}),
             'assegnato_a': forms.Select(attrs={'class': 'form-select'}),
             'priorita': forms.Select(attrs={'class': 'form-select'}),
+            'collaboratori': forms.SelectMultiple(attrs={'class': 'form-select', 'size': '5'}),
         }
         
         labels = {
             'titolo': 'Titolo Attività',
             'trattativa': 'Collegata alla Trattativa (Opzionale)',
             'assegnato_a': 'Assegna a',
+            'collaboratori': 'Altri Collaboratori',
             'priorita': 'Priorità',
             'data_scadenza': 'Data di Scadenza',
         }

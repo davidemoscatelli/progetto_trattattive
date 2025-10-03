@@ -1,0 +1,106 @@
+{% extends "trattative/base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="btn-group" role="group">
+        <a href="{% url 'kanban_board' %}" class="btn {% if request.resolver_match.url_name == 'kanban_board' %}btn-primary active{% else %}btn-outline-primary{% endif %}">
+            <i class="fas fa-columns me-2"></i>Kanban
+        </a>
+        <a href="{% url 'trattativa_list' %}" class="btn {% if request.resolver_match.url_name == 'trattativa_list' %}btn-primary active{% else %}btn-outline-primary{% endif %}">
+            <i class="fas fa-list me-2"></i>Lista
+        </a>
+    </div>
+
+    <a href="{% url 'esporta_excel' %}" class="btn btn-outline-success">
+        <i class="fas fa-file-excel me-2"></i>Esporta
+    </a>
+</div>
+
+<div class="card bg-light mb-4">
+    <div class="card-body">
+        <form method="get" action="{% url 'trattativa_list' %}">
+            <div class="row g-3 align-items-center">
+                <div class="col-xl-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" name="q" class="form-control" placeholder="Cerca titolo o cliente..." value="{{ request.GET.q }}">
+                    </div>
+                </div>
+                <div class="col-xl-2">
+                    <select name="stato" class="form-select">
+                        <option value="">Tutti gli stati</option>
+                        {% for val, label in stati_disponibili %}
+                            <option value="{{ val }}" {% if request.GET.stato == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-xl-2">
+                    <select name="responsabile" class="form-select">
+                        <option value="">Tutti i responsabili</option>
+                        {% for utente in utenti_disponibili %}
+                            <option value="{{ utente.id }}" {% if request.GET.responsabile == utente.id|stringformat:"s" %}selected{% endif %}>{{ utente.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-xl-2">
+                    <select name="collaboratore" class="form-select">
+                        <option value="">Tutti i collaboratori</option>
+                        {% for utente in utenti_disponibili %}
+                            <option value="{{ utente.id }}" {% if request.GET.collaboratore == utente.id|stringformat:"s" %}selected{% endif %}>{{ utente.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-xl-2">
+                    <button type="submit" class="btn btn-primary w-100">Filtra</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover table-striped mb-0">
+            <thead>
+                <tr>
+                    <th>Titolo</th>
+                    <th>Cliente</th>
+                    <th>Valore</th>
+                    <th>Stato</th>
+                    <th>Responsabile</th>
+                    <th>Collaboratori</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for trattativa in trattative %}
+                <tr>
+                    <td class="fw-bold">{{ trattativa.titolo }}</td>
+                    <td>{{ trattativa.cliente }}</td>
+                    <td>€ {{ trattativa.valore|floatformat:2 }}</td>
+                    <td><span class="badge 
+                        {% if trattativa.stato == 'Vinta' %}bg-success{% elif trattativa.stato == 'Persa' %}bg-danger{% else %}bg-primary{% endif %}">
+                        {{ trattativa.stato }}</span>
+                    </td>
+                    <td>{{ trattativa.responsabile.username|default:"-" }}</td>
+                    <td>
+                        {% for collaboratore in trattativa.collaboratori.all %}
+                            <span class="badge bg-secondary">{{ collaboratore.username }}</span>
+                        {% endfor %}
+                    </td>
+                    <td>
+                        <a href="{% url 'trattativa_detail' trattativa.pk %}" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted p-4">Nessuna trattativa trovata con questi filtri.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

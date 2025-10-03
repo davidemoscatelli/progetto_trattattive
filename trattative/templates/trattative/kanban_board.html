@@ -2,95 +2,80 @@
 
 {% block content %}
 <style>
+  /* Il CSS personalizzato non cambia */
   .kanban-container { 
     display: flex; 
     overflow-x: auto; 
-    padding-bottom: 1rem;
-    gap: 1.5rem;
+    padding-bottom: 1.5rem;
+    gap: 2rem;
   }
   
   .kanban-column {
-    flex: 0 0 300px; /* Larghezza fissa per tutte le colonne */
-  }
-  
-  .kanban-column .card {
-    background-color: #e9ecef;
-    border: none;
-    border-radius: 0.5rem;
-    height: 100%; /* Altezza uniforme per tutte le colonne */
+    flex: 0 0 300px; 
   }
 
-  .kanban-column .card-header {
-    background-color: transparent;
-    border-bottom: 1px solid #dee2e6;
-    font-weight: 600;
-  }
-  
-  .kanban-card { 
-    cursor: grab; 
-    border: 1px solid #dee2e6;
-    border-left-width: 4px;
-    transition: all 0.2s ease-in-out;
-    background-color: #ffffff;
+  .kanban-cards-container {
+    max-height: 65vh;
+    overflow-y: auto;
+    padding-right: 8px;
+    min-height: 150px; 
   }
 
-  /* Colori dinamici per il bordo */
-  .border-success { border-left-color: #198754 !important; }
-  .border-danger  { border-left-color: #dc3545 !important; }
-  .border-primary { border-left-color: #0d6efd !important; }
+  .kanban-cards-container::-webkit-scrollbar { width: 5px; }
+  .kanban-cards-container::-webkit-scrollbar-thumb { background: #ced4da; border-radius: 10px; }
 
-
-  .kanban-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  }
-
-  /* Stile per la scrollbar */
-  .kanban-container::-webkit-scrollbar { height: 8px; }
-  .kanban-container::-webkit-scrollbar-thumb { background: #ced4da; border-radius: 4px; }
-
-  /* Stile per mobile */
   @media (max-width: 768px) {
-    .kanban-container { flex-direction: column; overflow-x: hidden; gap: 1rem; }
+    .kanban-container { flex-direction: column; overflow-x: hidden; gap: 2rem; }
     .kanban-column { min-width: 100%; margin: 0; }
   }
 </style>
 
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="btn-group" role="group">
+        <a href="{% url 'kanban_board' %}" class="btn {% if request.resolver_match.url_name == 'kanban_board' %}btn-primary active{% else %}btn-outline-primary{% endif %}">
+            <i class="fas fa-columns me-2"></i>Kanban
+        </a>
+        <a href="{% url 'trattativa_list' %}" class="btn {% if request.resolver_match.url_name == 'trattativa_list' %}btn-primary active{% else %}btn-outline-primary{% endif %}">
+            <i class="fas fa-list me-2"></i>Lista
+        </a>
+    </div>
+
+    <a href="{% url 'esporta_excel' %}" class="btn btn-outline-success">
+        <i class="fas fa-file-excel me-2"></i>Esporta
+    </a>
+</div>
+
 <div class="kanban-container">
   {% for stato, trattative_list in kanban_data.items %}
-  <div class="kanban-column">
-    <div class="card">
-      <div class="card-header text-center">
-        {{ stato }} <span class="badge bg-secondary rounded-pill">{{ trattative_list.count }}</span>
-      </div>
-      <div class="card-body p-2 kanban-cards-container" style="min-height: 200px;">
-
-        {% for trattativa in trattative_list %}
-            <div class="card shadow-sm mb-3 kanban-card 
-                {% if trattativa.stato == 'Vinta' %}
-                    border-success
-                {% elif trattativa.stato == 'Persa' %}
-                    border-danger
-                {% else %}
-                    border-primary
-                {% endif %}
-            " data-id="{{ trattativa.pk }}">
-              <div class="card-body">
-                <h6 class="card-title">{{ trattativa.titolo }}</h6>
-                <p class="card-text small mb-2 text-muted">
-                    <i class="fas fa-user-tie me-2"></i>{{ trattativa.cliente }}
-                </p>
-                <p class="card-text small fw-bold">
-                    <i class="fas fa-euro-sign me-2"></i>{{ trattativa.valore|floatformat:2 }}
-                </p>
-                <a href="{% url 'trattativa_detail' trattativa.pk %}" class="btn btn-sm btn-outline-secondary mt-2">
-                  <i class="fas fa-eye me-1"></i>Dettagli
-                </a>
-              </div>
-            </div>
-        {% endfor %}
-
-      </div>
+  <div class="kanban-column" data-stato="{{ stato }}">
+    <div class="pb-2 mb-3 border-bottom">
+        <h5 class="text-muted fw-bold d-flex justify-content-between">
+            <span>{{ stato }}</span>
+            <span class="badge bg-light text-dark rounded-pill">{{ trattative_list.count }}</span>
+        </h5>
+    </div>
+    
+    <div class="kanban-cards-container">
+      {% for trattativa in trattative_list %}
+        <div class="card shadow-sm mb-3 border-0 border-start border-4 
+            {% if trattativa.stato == 'Vinta' %}
+                border-success
+            {% elif trattativa.stato == 'Persa' %}
+                border-danger
+            {% else %}
+                border-primary
+            {% endif %}
+        " data-id="{{ trattativa.pk }}">
+          <div class="card-body">
+              <h6 class="fw-bold">{{ trattativa.titolo }}</h6>
+              <p class="small text-muted mb-2"><i class="fas fa-building me-2"></i>{{ trattativa.cliente }}</p>
+              <p class="fs-5 text-dark mt-2 mb-3">€ {{ trattativa.valore|floatformat:2 }}</p>
+              <a href="{% url 'trattativa_detail' trattativa.pk %}" class="btn btn-sm btn-light border">
+                <i class="fas fa-eye me-1"></i>Dettagli
+              </a>
+          </div>
+        </div>
+      {% endfor %}
     </div>
   </div>
   {% endfor %}
@@ -106,9 +91,23 @@
         onEnd: function (evt) {
           const card = evt.item;
           const toColumnEl = evt.to.closest('.kanban-column');
-          const nuovoStato = toColumnEl.querySelector('.card-header').innerText.split(' ')[0];
+          const fromColumnEl = evt.from.closest('.kanban-column');
           const trattativaId = card.dataset.id;
+          const nuovoStato = toColumnEl.dataset.stato;
+
+          // --- NUOVA LOGICA PER AGGIORNARE I CONTATORI ---
+          // Controlliamo se lo spostamento è avvenuto tra colonne diverse
+          if (fromColumnEl !== toColumnEl) {
+              // Trova i badge dei contatori
+              const fromBadge = fromColumnEl.querySelector('.badge');
+              const toBadge = toColumnEl.querySelector('.badge');
+
+              // Converte il testo in numero, aggiorna e riscrive
+              fromBadge.innerText = parseInt(fromBadge.innerText) - 1;
+              toBadge.innerText = parseInt(toBadge.innerText) + 1;
+          }
           
+          // La logica per inviare i dati al server non cambia
           fetch("{% url 'update_trattativa_status' %}", {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

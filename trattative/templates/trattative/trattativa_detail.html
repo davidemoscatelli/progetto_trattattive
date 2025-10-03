@@ -17,6 +17,13 @@
                 <p><strong>Valore:</strong> € {{ trattativa.valore|floatformat:2 }}</p>
                 <p><strong>Stato:</strong> <span class="badge bg-primary">{{ trattativa.stato }}</span></p>
                 <p><strong>Responsabile:</strong> {{ trattativa.responsabile|default:"Non assegnato" }}</p>
+                {% if trattativa.collaboratori.all %}
+                    <p><strong>Collaboratori:</strong>
+                        {% for utente in trattativa.collaboratori.all %}
+                            <span class.badge bg-secondary">{{ utente.username }}</span>
+                        {% endfor %}
+                    </p>
+                {% endif %}
                 <hr>
                 <h6>Note:</h6>
                 <p>{{ trattativa.note|linebreaks|default:"Nessuna nota." }}</p>

@@ -41,4 +41,6 @@ urlpatterns = [
     # URL per le API interne
     path('api/update-status/', views.update_trattativa_status, name='update_trattativa_status'),
     path('api/chart-data/', views.chart_data_api, name='chart_data_api'),
+    path('esporta/excel/', views.esporta_trattative_excel, name='esporta_excel'),
+    path('lista/', views.trattativa_list, name='trattativa_list'),
 ]
