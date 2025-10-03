@@ -79,6 +79,26 @@
 </div>
 
 <script>
-  // Lo script del grafico non cambia
+  document.addEventListener('DOMContentLoaded', function() {
+    fetch("{% url 'chart_data_api' %}")
+      .then(response => response.json())
+      .then(data => {
+        const ctx = document.getElementById('winLossChart').getContext('2d');
+        new Chart(ctx, {
+          type: 'doughnut', // Cambiato in 'doughnut' per un look più moderno
+          data: {
+            labels: data.labels,
+            datasets: [{
+              label: 'Numero di Trattative',
+              data: data.data,
+              backgroundColor: ['#198754', '#dc3545'],
+              borderColor: '#ffffff',
+              borderWidth: 2
+            }]
+          },
+          options: { responsive: true, plugins: { legend: { position: 'top' } } }
+        });
+      });
+  });
 </script>
 {% endblock %}
