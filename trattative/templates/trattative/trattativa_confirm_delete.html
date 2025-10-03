@@ -1,0 +1,35 @@
+{% extends "trattative/base.html" %}
+{% load bootstrap5 %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-danger shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h3>Conferma Eliminazione</h3>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Sei sicuro di voler eliminare definitivamente la trattativa?</p>
+                    
+                    <div class="alert alert-warning">
+                        <h4 class="alert-heading">{{ trattativa.titolo }}</h4>
+                        <p>
+                            <strong>Cliente:</strong> {{ trattativa.cliente }} <br>
+                            <strong>Valore:</strong> € {{ trattativa.valore|floatformat:2 }}
+                        </p>
+                    </div>
+                    
+                    <p><strong>Attenzione:</strong> Questa azione non può essere annullata.</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Sì, Elimina</button>
+                        <a href="{% url 'trattativa_update' trattativa.pk %}" class="btn btn-secondary">Annulla</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

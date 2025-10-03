@@ -1,0 +1,33 @@
+{% extends "trattative/base.html" %}
+{% load bootstrap5 %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h3>{{ tipo_azione }} Trattativa</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {% bootstrap_form form %}
+                        <div class="d-flex justify-content-between mt-4">
+                            <div>
+                                <button type="submit" class="btn btn-primary">Salva Modifiche</button>
+                                <a href="{% url 'kanban_board' %}" class="btn btn-secondary">Annulla</a>
+                            </div>
+                            {% if form.instance.pk %}
+                            <a href="{% url 'trattativa_delete' form.instance.pk %}" class="btn btn-danger">
+                                Elimina
+                            </a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

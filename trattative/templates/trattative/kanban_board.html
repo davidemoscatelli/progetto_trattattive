@@ -1,0 +1,86 @@
+{% extends "trattative/base.html" %}
+
+{% block content %}
+<style>
+  .kanban-container { display: flex; overflow-x: auto; padding-bottom: 1rem; }
+  .kanban-column { min-width: 320px; margin: 0 10px; flex: 1; }
+
+   @media (max-width: 768px) {
+    .kanban-container {
+      flex-direction: column; /* Impila le colonne verticalmente */
+      overflow-x: hidden; /* Nasconde lo scroll orizzontale */
+    }
+    .kanban-column {
+      min-width: 100%; /* Colonne a piena larghezza */
+      margin: 0 0 1rem 0; /* Aggiunge spazio sotto ogni colonna */
+    }
+  }
+</style>
+
+<div class="kanban-container">
+  {% for stato, trattative_list in kanban_data.items %}
+  <div class="kanban-column">
+    <div class="card bg-light" id="colonna-{{ forloop.counter }}" data-stato="{{ stato }}">
+      <div class="card-header text-center">
+        <h5>{{ stato }} <span class="badge bg-secondary">{{ trattative_list.count }}</span></h5>
+      </div>
+      <div class="card-body p-2 kanban-cards-container" style="min-height: 100px;">
+        {% for trattativa in trattative_list %}
+        <div class="card shadow-sm mb-3" data-id="{{ trattativa.pk }}">
+          <div class="card-body">
+            <h6 class="card-title">{{ trattativa.titolo }}</h6>
+            <p class="card-text small mb-2">
+                <strong>Cliente:</strong> {{ trattativa.cliente }}<br>
+                <strong>Valore:</strong> € {{ trattativa.valore|floatformat:2 }}
+            </p>
+            <a href="{% url 'trattativa_update' trattativa.pk %}" class="btn btn-sm btn-outline-secondary">Modifica</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const columns = document.querySelectorAll('.kanban-cards-container');
+    
+    columns.forEach(column => {
+      new Sortable(column, {
+        group: 'kanban', // Permette di spostare card tra colonne
+        animation: 150,
+        onEnd: function (evt) {
+          const card = evt.item; // La card spostata
+          const toColumn = evt.to.closest('.card[data-stato]'); // La colonna di destinazione
+          
+          const trattativaId = card.dataset.id;
+          const nuovoStato = toColumn.dataset.stato;
+          
+          // Invia i dati al server
+          fetch("{% url 'update_trattativa_status' %}", {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              trattativa_id: trattativaId,
+              nuovo_stato: nuovoStato,
+            }),
+          })
+          .then(response => response.json())
+          .then(data => {
+            console.log('Success:', data);
+            // Qui potresti aggiungere una notifica di successo
+          })
+          .catch((error) => {
+            console.error('Error:', error);
+            // Qui potresti mostrare un errore e forse rimettere la card al suo posto
+          });
+        },
+      });
+    });
+  });
+</script>
+{% endblock %}

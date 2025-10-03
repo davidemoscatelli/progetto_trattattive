@@ -1,0 +1,88 @@
+{% extends "trattative/base.html" %}
+
+{% block content %}
+<div class="container">
+  <h2 class="mb-4">Dashboard KPI</h2>
+  
+  <div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card text-center text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Tasso di Conversione</h5>
+                <p class="display-4">{{ tasso_conversione|floatformat:2 }}%</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card text-center text-white bg-info">
+            <div class="card-body">
+                <h5 class="card-title">Valore Totale Vinto</h5>
+                <p class="display-4">€ {{ valore_totale_vinto|floatformat:2 }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Trattative in Corso</h5>
+                <p class="display-4">{{ trattative_in_corso }}</p>
+                <small class="text-muted">Valore: € {{ valore_in_corso|floatformat:2 }}</small>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Risultato Trattative (Vinte vs. Perse)</h5>
+          <canvas id="winLossChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Aspettiamo che la pagina sia completamente caricata
+  document.addEventListener('DOMContentLoaded', function() {
+    // 1. Prendiamo i dati dalla nostra API
+    fetch("{% url 'chart_data_api' %}")
+      .then(response => response.json())
+      .then(data => {
+        // 2. Prendiamo l'elemento canvas
+        const ctx = document.getElementById('winLossChart').getContext('2d');
+        
+        // 3. Creiamo il nuovo grafico
+        new Chart(ctx, {
+          type: 'pie', // Tipo di grafico (a torta)
+          data: {
+            labels: data.labels, // ['Vinte', 'Perse']
+            datasets: [{
+              label: 'Numero di Trattative',
+              data: data.data, // [numero_vinte, numero_perse]
+              backgroundColor: [
+                'rgba(40, 167, 69, 0.7)', // Verde per 'Vinte'
+                'rgba(220, 53, 69, 0.7)', // Rosso per 'Perse'
+              ],
+              borderColor: [
+                'rgba(40, 167, 69, 1)',
+                'rgba(220, 53, 69, 1)',
+              ],
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true, // Rende il grafico responsive
+            plugins: {
+              legend: {
+                position: 'top',
+              }
+            }
+          }
+        });
+      });
+  });
+</script>
+{% endblock %}
