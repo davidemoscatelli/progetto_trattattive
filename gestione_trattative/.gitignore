@@ -1,0 +1,27 @@
+# Ambiente virtuale
+venv/
+env/
+.venv/
+
+# Database locale
+db.sqlite3
+*.sqlite3
+
+# File di cache di Python
+__pycache__/
+*.pyc
+
+# File di variabili d'ambiente (contiene dati sensibili)
+.env
+
+# Cartelle di file statici e media raccolti
+staticfiles/
+media/
+
+# File specifici del sistema operativo
+.DS_Store
+Thumbs.db
+
+# File di configurazione dell'editor/IDE
+.vscode/
+.idea/
