@@ -2,7 +2,6 @@
 
 {% block content %}
 <style>
-  /* Il CSS personalizzato non cambia */
   .kanban-container { 
     display: flex; 
     overflow-x: auto; 
@@ -19,6 +18,8 @@
     overflow-y: auto;
     padding-right: 8px;
     min-height: 150px; 
+    /* Migliora il comportamento touch: si può scrollare in verticale senza conflitti col drag */
+    touch-action: pan-y;
   }
 
   .kanban-cards-container::-webkit-scrollbar { width: 5px; }
@@ -31,63 +32,89 @@
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <div class="btn-group" role="group">
-        <a href="{% url 'kanban_board' %}" class="btn {% if request.resolver_match.url_name == 'kanban_board' %}btn-primary active{% else %}btn-outline-primary{% endif %}">
-            <i class="fas fa-columns me-2"></i>Kanban
-        </a>
-        <a href="{% url 'trattativa_list' %}" class="btn {% if request.resolver_match.url_name == 'trattativa_list' %}btn-primary active{% else %}btn-outline-primary{% endif %}">
-            <i class="fas fa-list me-2"></i>Lista
-        </a>
-    </div>
-
-    <a href="{% url 'esporta_excel' %}" class="btn btn-outline-success">
-        <i class="fas fa-file-excel me-2"></i>Esporta
+  <div class="btn-group" role="group">
+    <a href="{% url 'kanban_board' %}" class="btn {% if request.resolver_match.url_name == 'kanban_board' %}btn-primary active{% else %}btn-outline-primary{% endif %}">
+      <i class="fas fa-columns me-2"></i>Kanban
     </a>
+    <a href="{% url 'trattativa_list' %}" class="btn {% if request.resolver_match.url_name == 'trattativa_list' %}btn-primary active{% else %}btn-outline-primary{% endif %}">
+      <i class="fas fa-list me-2"></i>Lista
+    </a>
+  </div>
+
+  <a href="{% url 'esporta_excel' %}" class="btn btn-outline-success">
+    <i class="fas fa-file-excel me-2"></i>Esporta
+  </a>
 </div>
 
 <div class="kanban-container">
   {% for stato, trattative_list in kanban_data.items %}
-  <div class="kanban-column" data-stato="{{ stato }}">
-    <div class="pb-2 mb-3 border-bottom">
+    <div class="kanban-column" data-stato="{{ stato }}">
+      <div class="pb-2 mb-3 border-bottom">
         <h5 class="text-muted fw-bold d-flex justify-content-between">
-            <span>{{ stato }}</span>
-            <span class="badge bg-light text-dark rounded-pill">{{ trattative_list.count }}</span>
+          <span>{{ stato }}</span>
+          <span class="badge bg-light text-dark rounded-pill">{{ trattative_list.count }}</span>
         </h5>
-    </div>
-    
-    <div class="kanban-cards-container">
-      {% for trattativa in trattative_list %}
-        <div class="card shadow-sm mb-3 border-0 border-start border-4 
-            {% if trattativa.stato == 'Vinta' %}
-                border-success
-            {% elif trattativa.stato == 'Persa' %}
-                border-danger
-            {% else %}
-                border-primary
-            {% endif %}
-        " data-id="{{ trattativa.pk }}">
-          <div class="card-body">
+      </div>
+      
+      <div class="kanban-cards-container">
+        {% for trattativa in trattative_list %}
+          <div class="card shadow-sm mb-3 border-0 border-start border-4 
+              {% if trattativa.stato == 'Vinta' %}
+                  border-success
+              {% elif trattativa.stato == 'Persa' %}
+                  border-danger
+              {% else %}
+                  border-primary
+              {% endif %}
+          " data-id="{{ trattativa.pk }}">
+            <div class="card-body">
               <h6 class="fw-bold">{{ trattativa.titolo }}</h6>
               <p class="small text-muted mb-2"><i class="fas fa-building me-2"></i>{{ trattativa.cliente }}</p>
               <p class="fs-5 text-dark mt-2 mb-3">€ {{ trattativa.valore|floatformat:2 }}</p>
               <a href="{% url 'trattativa_detail' trattativa.pk %}" class="btn btn-sm btn-light border">
                 <i class="fas fa-eye me-1"></i>Dettagli
               </a>
+            </div>
           </div>
-        </div>
-      {% endfor %}
+        {% endfor %}
+      </div>
     </div>
-  </div>
   {% endfor %}
 </div>
 
 <script>
+  // Helper per CSRF (Django)
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return decodeURIComponent(parts.pop().split(';').shift());
+    return null;
+  }
+  const CSRFTOKEN = getCookie('csrftoken');
+
   document.addEventListener('DOMContentLoaded', function () {
+    // Tempo di pressione prolungata (ms) per avviare il drag su dispositivi touch
+    const LONG_PRESS_MS = 600;
+
     const columns = document.querySelectorAll('.kanban-cards-container');
     columns.forEach(column => {
       new Sortable(column, {
         group: 'kanban',
         animation: 150,
+
+        // --- SOLO MOBILE: trascina dopo pressione prolungata ---
+        delay: LONG_PRESS_MS,       // attende prima di iniziare il drag
+        delayOnTouchOnly: true,     // applica il delay solo su dispositivi touch
+        touchStartThreshold: 3,     // aiuta a distinguere dallo scroll
+
+        // --- Mantieni link e bottoni cliccabili dentro la card ---
+        filter: 'a, button, .btn',
+        preventOnFilter: false,
+
+        // --- Fallback più stabile su alcuni browser mobili ---
+        fallbackOnBody: true,
+        swapThreshold: 0.65,
+
         onEnd: function (evt) {
           const card = evt.item;
           const toColumnEl = evt.to.closest('.kanban-column');
@@ -95,22 +122,21 @@
           const trattativaId = card.dataset.id;
           const nuovoStato = toColumnEl.dataset.stato;
 
-          // --- NUOVA LOGICA PER AGGIORNARE I CONTATORI ---
-          // Controlliamo se lo spostamento è avvenuto tra colonne diverse
+          // Aggiorna i badge solo se cambia colonna
           if (fromColumnEl !== toColumnEl) {
-              // Trova i badge dei contatori
-              const fromBadge = fromColumnEl.querySelector('.badge');
-              const toBadge = toColumnEl.querySelector('.badge');
-
-              // Converte il testo in numero, aggiorna e riscrive
-              fromBadge.innerText = parseInt(fromBadge.innerText) - 1;
-              toBadge.innerText = parseInt(toBadge.innerText) + 1;
+            const fromBadge = fromColumnEl.querySelector('.badge');
+            const toBadge = toColumnEl.querySelector('.badge');
+            fromBadge.innerText = Math.max(0, parseInt(fromBadge.innerText) - 1);
+            toBadge.innerText = parseInt(toBadge.innerText) + 1;
           }
           
-          // La logica per inviare i dati al server non cambia
+          // Invio al server
           fetch("{% url 'update_trattativa_status' %}", {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'X-CSRFToken': CSRFTOKEN || ''
+            },
             body: JSON.stringify({
               trattativa_id: trattativaId,
               nuovo_stato: nuovoStato,
