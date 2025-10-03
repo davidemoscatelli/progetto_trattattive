@@ -2,11 +2,10 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF--8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestione Trattative</title>
     {% bootstrap_css %}
-    {% bootstrap_javascript %}
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
@@ -20,12 +19,15 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'kpi_dashboard' %}">Dashboard KPI</a>
                     </li>
+                    <li class="nav-item">
+                        <a href="{% url 'trattativa_create' %}" class="btn btn-sm btn-light">+ Aggiungi</a>
+                    </li>
                 </ul>
                 {% if user.is_authenticated %}
                 <span class="navbar-text text-white me-3">Ciao, {{ user.username }}</span>
-                <form action="{% url 'logout' %}" method="post">
+                <form action="{% url 'logout' %}" method="post" class="d-flex">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-light">Logout</button>
+                    <button type="submit" class="btn btn-outline-light">Logout</button>
                 </form>
                 {% endif %}
             </div>
@@ -35,8 +37,9 @@
     <main class="container-fluid">
         {% block content %}{% endblock %}
     </main>
+
+    {% bootstrap_javascript %}
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> </body>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>
