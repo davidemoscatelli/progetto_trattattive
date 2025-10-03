@@ -10,6 +10,10 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 from .models import Trattativa, Task, Commento
 from .forms import TrattativaForm, CommentoForm, TaskForm
+from decimal import Decimal
+from django.db.models.functions import Coalesce
+from django.db.models import Value, DecimalField
+
 
 @login_required
 def homepage(request):
@@ -271,36 +275,42 @@ def trattativa_list(request):
 
 @login_required
 def kpi_dashboard(request):
-    # Riepilogo trattative (già esistente)
     trattative_vinte = Trattativa.objects.filter(stato='Vinta')
-    valore_totale_vinto = trattative_vinte.aggregate(Sum('valore'))['valore__sum'] or 0
-    trattative_in_corso_count = Trattativa.objects.exclude(stato__in=['Vinta', 'Persa']).count()
-    
-    # --- NUOVA LOGICA PER LA PIPELINE PESATA ---
+    valore_totale_vinto = trattative_vinte.aggregate(
+        totale=Coalesce(Sum('valore'), Value(0), output_field=DecimalField())
+    )['totale']
 
-    # Valore al 25% (Da Contattare, Contattato)
+    trattative_in_corso_count = Trattativa.objects.exclude(stato__in=['Vinta', 'Persa']).count()
+
+    # --- NUOVA LOGICA PER LA PIPELINE PESATA ---
     valore_25 = Trattativa.objects.filter(
         stato__in=['Da Contattare', 'Contattato']
-    ).aggregate(Sum('valore'))['valore__sum'] or 0
+    ).aggregate(
+        totale=Coalesce(Sum('valore'), Value(0), output_field=DecimalField())
+    )['totale']
 
-    # Valore al 50% (Demo, Preventivo Tecnico)
     valore_50 = Trattativa.objects.filter(
         stato__in=['Demo', 'Preventivo Tecnico']
-    ).aggregate(Sum('valore'))['valore__sum'] or 0
+    ).aggregate(
+        totale=Coalesce(Sum('valore'), Value(0), output_field=DecimalField())
+    )['totale']
 
-    # Valore al 75% (Preventivo Commerciale)
     valore_75 = Trattativa.objects.filter(
         stato='Preventivo Commerciale'
-    ).aggregate(Sum('valore'))['valore__sum'] or 0
-    
+    ).aggregate(
+        totale=Coalesce(Sum('valore'), Value(0), output_field=DecimalField())
+    )['totale']
+
     # Calcolo del valore totale pesato della pipeline
-    valore_pesato = (valore_25 * 0.25) + (valore_50 * 0.50) + (valore_75 * 0.75)
+    valore_pesato = (
+        valore_25 * Decimal('0.25')
+        + valore_50 * Decimal('0.50')
+        + valore_75 * Decimal('0.75')
+    )
 
     context = {
         'trattative_in_corso_count': trattative_in_corso_count,
         'valore_totale_vinto': valore_totale_vinto,
-        
-        # Nuovi valori per il template
         'valore_25': valore_25,
         'valore_50': valore_50,
         'valore_75': valore_75,
