@@ -5,30 +5,25 @@
 
 <div class="row">
     <div class="col-lg-7 mb-4">
-        <div class="card h-100">
-            <div class="card-header">
-                <h4><i class="fas fa-exclamation-circle text-danger me-2"></i>Le Tue Attività Urgenti</h4>
-            </div>
+        <div class="card bg-light border-0 h-100">
             <div class="card-body">
+                <h4 class="card-title mb-4"><i class="fas fa-exclamation-circle text-danger me-2"></i>Le Tue Attività Urgenti</h4>
                 {% if tasks_urgenti %}
-                    <ul class="list-group list-group-flush">
-                        {% for task in tasks_urgenti %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {% for task in tasks_urgenti %}
+                        <div class="card shadow-sm mb-3">
+                            <div class="card-body d-flex justify-content-between align-items-center">
                                 <div>
-                                    <a href="{% url 'task_update' task.pk %}" class="text-decoration-none">{{ task.titolo }}</a>
-                                    <br>
-                                    <small class="text-muted">
-                                        {% if task.trattativa %}
-                                            Trattativa: {{ task.trattativa.titolo }}
-                                        {% endif %}
-                                    </small>
+                                    <a href="{% url 'task_update' task.pk %}" class="text-decoration-none fw-bold">{{ task.titolo }}</a>
+                                    {% if task.trattativa %}
+                                        <br><small class="text-muted">Trattativa: {{ task.trattativa.titolo }}</small>
+                                    {% endif %}
                                 </div>
                                 {% if task.data_scadenza %}
                                     <span class="badge bg-danger rounded-pill">Scadenza: {{ task.data_scadenza|date:"d M" }}</span>
                                 {% endif %}
-                            </li>
-                        {% endfor %}
-                    </ul>
+                            </div>
+                        </div>
+                    {% endfor %}
                 {% else %}
                     <div class="text-center p-4">
                         <i class="fas fa-check-circle fa-3x text-success"></i>
@@ -36,35 +31,33 @@
                     </div>
                 {% endif %}
             </div>
-            <div class="card-footer text-center">
-                <a href="{% url 'task_list' %}">Vai alla To-Do List completa</a>
-            </div>
         </div>
     </div>
 
     <div class="col-lg-5 mb-4">
-        <div class="card h-100">
-            <div class="card-header">
-                <h4><i class="fas fa-briefcase me-2"></i>Riepilogo Trattative</h4>
-            </div>
-            <div class="card-body">
+        <div class="card bg-light border-0 h-100">
+             <div class="card-body">
+                <h4 class="card-title mb-4"><i class="fas fa-briefcase me-2"></i>Riepilogo Trattative</h4>
                 <div class="list-group">
                     <div class="list-group-item d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">In Corso</h5>
-                        <span class="display-6">{{ trattative_in_corso_count }}</span>
+                        <div>
+                            <h6 class="mb-0">In Corso</h6>
+                            <small class="text-muted">Numero di trattative aperte</small>
+                        </div>
+                        <span class="fw-bold fs-4">{{ trattative_in_corso_count }}</span>
                     </div>
                     <div class="list-group-item">
-                        <h5 class="mb-1">Valore in Corso</h5>
-                        <p class="display-6 mb-0">€ {{ valore_in_corso|floatformat:2 }}</p>
+                        <h6 class="mb-1">Valore in Corso</h6>
+                        <p class="fw-bold fs-4 mb-0">€ {{ valore_in_corso|floatformat:2 }}</p>
                     </div>
                     <div class="list-group-item d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Vinte (Totali)</h5>
-                        <span class="display-6">{{ trattative_vinte_count }}</span>
+                        <div>
+                            <h6 class="mb-0">Vinte (Totali)</h6>
+                            <small class="text-muted">Trattative concluse con successo</small>
+                        </div>
+                        <span class="fw-bold fs-4">{{ trattative_vinte_count }}</span>
                     </div>
                 </div>
-            </div>
-             <div class="card-footer text-center">
-                <a href="{% url 'kanban_board' %}">Vai alla Bacheca Kanban</a>
             </div>
         </div>
     </div>

@@ -2,36 +2,92 @@
 
 {% block content %}
 <style>
-  .kanban-container { display: flex; overflow-x: auto; padding-bottom: 1rem; }
-  .kanban-column { min-width: 320px; margin: 0 10px; flex: 1; }
-  .kanban-card { cursor: grab; }
+  .kanban-container { 
+    display: flex; 
+    overflow-x: auto; 
+    padding-bottom: 1rem;
+    gap: 1.5rem;
+  }
+  
+  .kanban-column {
+    flex: 0 0 300px; /* Larghezza fissa per tutte le colonne */
+  }
+  
+  .kanban-column .card {
+    background-color: #e9ecef;
+    border: none;
+    border-radius: 0.5rem;
+    height: 100%; /* Altezza uniforme per tutte le colonne */
+  }
 
+  .kanban-column .card-header {
+    background-color: transparent;
+    border-bottom: 1px solid #dee2e6;
+    font-weight: 600;
+  }
+  
+  .kanban-card { 
+    cursor: grab; 
+    border: 1px solid #dee2e6;
+    border-left-width: 4px;
+    transition: all 0.2s ease-in-out;
+    background-color: #ffffff;
+  }
+
+  /* Colori dinamici per il bordo */
+  .border-success { border-left-color: #198754 !important; }
+  .border-danger  { border-left-color: #dc3545 !important; }
+  .border-primary { border-left-color: #0d6efd !important; }
+
+
+  .kanban-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+
+  /* Stile per la scrollbar */
+  .kanban-container::-webkit-scrollbar { height: 8px; }
+  .kanban-container::-webkit-scrollbar-thumb { background: #ced4da; border-radius: 4px; }
+
+  /* Stile per mobile */
   @media (max-width: 768px) {
-    .kanban-container { flex-direction: column; overflow-x: hidden; }
-    .kanban-column { min-width: 100%; margin: 0 0 1rem 0; }
+    .kanban-container { flex-direction: column; overflow-x: hidden; gap: 1rem; }
+    .kanban-column { min-width: 100%; margin: 0; }
   }
 </style>
 
 <div class="kanban-container">
   {% for stato, trattative_list in kanban_data.items %}
   <div class="kanban-column">
-    <div class="card bg-light" data-stato="{{ stato }}">
+    <div class="card">
       <div class="card-header text-center">
         {{ stato }} <span class="badge bg-secondary rounded-pill">{{ trattative_list.count }}</span>
       </div>
       <div class="card-body p-2 kanban-cards-container" style="min-height: 200px;">
 
         {% for trattativa in trattative_list %}
-        <div class="card shadow-sm mb-3 kanban-card" data-id="{{ trattativa.pk }}">
-          <div class="card-body">
-            <h6 class="card-title">{{ trattativa.titolo }}</h6>
-            <p class="card-text small mb-2">
-                <strong>Cliente:</strong> {{ trattativa.cliente }}<br>
-                <strong>Valore:</strong> € {{ trattativa.valore|floatformat:2 }}
-            </p>
-            <a href="{% url 'trattativa_update' trattativa.pk %}" class="btn btn-sm btn-outline-secondary">Dettagli</a>
-          </div>
-        </div>
+            <div class="card shadow-sm mb-3 kanban-card 
+                {% if trattativa.stato == 'Vinta' %}
+                    border-success
+                {% elif trattativa.stato == 'Persa' %}
+                    border-danger
+                {% else %}
+                    border-primary
+                {% endif %}
+            " data-id="{{ trattativa.pk }}">
+              <div class="card-body">
+                <h6 class="card-title">{{ trattativa.titolo }}</h6>
+                <p class="card-text small mb-2 text-muted">
+                    <i class="fas fa-user-tie me-2"></i>{{ trattativa.cliente }}
+                </p>
+                <p class="card-text small fw-bold">
+                    <i class="fas fa-euro-sign me-2"></i>{{ trattativa.valore|floatformat:2 }}
+                </p>
+                <a href="{% url 'trattativa_detail' trattativa.pk %}" class="btn btn-sm btn-outline-secondary mt-2">
+                  <i class="fas fa-eye me-1"></i>Dettagli
+                </a>
+              </div>
+            </div>
         {% endfor %}
 
       </div>
@@ -49,7 +105,8 @@
         animation: 150,
         onEnd: function (evt) {
           const card = evt.item;
-          const toColumn = evt.to.closest('.card[data-stato]');
+          const toColumnEl = evt.to.closest('.kanban-column');
+          const nuovoStato = toColumnEl.querySelector('.card-header').innerText.split(' ')[0];
           const trattativaId = card.dataset.id;
           
           fetch("{% url 'update_trattativa_status' %}", {
