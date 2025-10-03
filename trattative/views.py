@@ -267,3 +267,43 @@ def trattativa_list(request):
         'utenti_disponibili': User.objects.all(), # Passa tutti gli utenti al template
     }
     return render(request, 'trattative/trattativa_list.html', context)
+
+
+@login_required
+def kpi_dashboard(request):
+    # Riepilogo trattative (già esistente)
+    trattative_vinte = Trattativa.objects.filter(stato='Vinta')
+    valore_totale_vinto = trattative_vinte.aggregate(Sum('valore'))['valore__sum'] or 0
+    trattative_in_corso_count = Trattativa.objects.exclude(stato__in=['Vinta', 'Persa']).count()
+    
+    # --- NUOVA LOGICA PER LA PIPELINE PESATA ---
+
+    # Valore al 25% (Da Contattare, Contattato)
+    valore_25 = Trattativa.objects.filter(
+        stato__in=['Da Contattare', 'Contattato']
+    ).aggregate(Sum('valore'))['valore__sum'] or 0
+
+    # Valore al 50% (Demo, Preventivo Tecnico)
+    valore_50 = Trattativa.objects.filter(
+        stato__in=['Demo', 'Preventivo Tecnico']
+    ).aggregate(Sum('valore'))['valore__sum'] or 0
+
+    # Valore al 75% (Preventivo Commerciale)
+    valore_75 = Trattativa.objects.filter(
+        stato='Preventivo Commerciale'
+    ).aggregate(Sum('valore'))['valore__sum'] or 0
+    
+    # Calcolo del valore totale pesato della pipeline
+    valore_pesato = (valore_25 * 0.25) + (valore_50 * 0.50) + (valore_75 * 0.75)
+
+    context = {
+        'trattative_in_corso_count': trattative_in_corso_count,
+        'valore_totale_vinto': valore_totale_vinto,
+        
+        # Nuovi valori per il template
+        'valore_25': valore_25,
+        'valore_50': valore_50,
+        'valore_75': valore_75,
+        'valore_pesato': valore_pesato,
+    }
+    return render(request, 'trattative/kpi_dashboard.html', context)

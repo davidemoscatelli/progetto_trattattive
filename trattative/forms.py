@@ -1,10 +1,12 @@
+# trattative/forms.py
+
 from django import forms
-from .models import Trattativa, Commento, Task # Assicurati di importare anche Commento
+from django.contrib.auth.models import User
+from .models import Trattativa, Commento, Task
 
 class TrattativaForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Rendiamo il campo non obbligatorio a livello di form
         self.fields['responsabile'].required = False
 
     class Meta:
@@ -16,11 +18,10 @@ class TrattativaForm(forms.ModelForm):
             'valore': forms.NumberInput(attrs={'class': 'form-control'}),
             'stato': forms.Select(attrs={'class': 'form-select'}),
             'responsabile': forms.Select(attrs={'class': 'form-select'}),
-            'collaboratori': forms.SelectMultiple(attrs={'class': 'form-select', 'size': '5'}),
             'note': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'collaboratori': forms.SelectMultiple(attrs={'class': 'form-select', 'size': '5'}),
         }
 
-# --- AGGIUNGI QUESTA CLASSE CHE MANCA ---
 class CommentoForm(forms.ModelForm):
     class Meta:
         model = Commento
@@ -32,16 +33,25 @@ class CommentoForm(forms.ModelForm):
                 'placeholder': 'Scrivi un commento...'
             }),
         }
-        labels = {
-            'testo': '' # Nasconde l'etichetta del campo
-        }
+        labels = { 'testo': '' }
 
+# --- QUESTA È LA CLASSE DA CORREGGERE ---
 class TaskForm(forms.ModelForm):
+    def __init__(self, user, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Filtra la lista degli utenti assegnabili
+        gruppi_utente = user.gruppi_lavoro.all()
+        membri_dei_gruppi = User.objects.filter(gruppi_lavoro__in=gruppi_utente).distinct()
+        
+        if membri_dei_gruppi.exists():
+            self.fields['assegnato_a'].queryset = membri_dei_gruppi
+        else:
+            self.fields['assegnato_a'].queryset = User.objects.filter(pk=user.pk)
+
     class Meta:
         model = Task
         fields = ['titolo', 'trattativa', 'assegnato_a', 'priorita', 'data_scadenza', 'collaboratori']
-
-        # Usiamo un widget HTML5 per il campo data per un'esperienza migliore
         widgets = {
             'data_scadenza': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'titolo': forms.TextInput(attrs={'class': 'form-control'}),
@@ -50,12 +60,11 @@ class TaskForm(forms.ModelForm):
             'priorita': forms.Select(attrs={'class': 'form-select'}),
             'collaboratori': forms.SelectMultiple(attrs={'class': 'form-select', 'size': '5'}),
         }
-        
         labels = {
             'titolo': 'Titolo Attività',
             'trattativa': 'Collegata alla Trattativa (Opzionale)',
             'assegnato_a': 'Assegna a',
-            'collaboratori': 'Altri Collaboratori',
             'priorita': 'Priorità',
             'data_scadenza': 'Data di Scadenza',
+            'collaboratori': 'Altri Collaboratori',
         }

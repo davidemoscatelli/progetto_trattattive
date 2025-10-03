@@ -1,32 +1,66 @@
 {% extends "trattative/base.html" %}
 
 {% block content %}
+<style>
+    /* Stile per il bordo colorato in alto */
+    .border-top-success { border-top: 4px solid #198754; }
+    .border-top-warning { border-top: 4px solid #ffc107; }
+    .border-top-primary { border-top: 4px solid #0d6efd; }
+    .border-top-secondary { border-top: 4px solid #6c757d; }
+</style>
+
 <div class="container">
-  <h2 class="mb-4">Dashboard KPI</h2>
-  
+  <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2><i class="fas fa-chart-line me-2"></i>Dashboard KPI</h2>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8 mb-4">
+        <div class="card h-100 shadow-sm border-top-primary">
+            <div class="card-body text-center d-flex flex-column justify-content-center">
+                <h5 class="card-title text-muted">Valore Pipeline Pesato (Forecast)</h5>
+                <p class="display-4 fw-bold text-primary mb-0">€ {{ valore_pesato|floatformat:2 }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100 shadow-sm border-top-success">
+            <div class="card-body text-center d-flex flex-column justify-content-center">
+                <h5 class="card-title text-muted">Valore Totale Vinto</h5>
+                <p class="display-4 fw-bold text-success mb-0">€ {{ valore_totale_vinto|floatformat:2 }}</p>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <hr class="my-4">
+
+  <h4 class="mb-3">Dettaglio Pipeline</h4>
   <div class="row">
     <div class="col-md-4 mb-4">
-        <div class="card text-center text-white bg-success h-100">
-            <div class="card-body d-flex flex-column justify-content-center">
-                <h5 class="card-title">Tasso di Conversione</h5>
-                <p class="display-4 mb-0">{{ tasso_conversione|floatformat:2 }}%</p>
+        <div class="card h-100 shadow-sm border-top-secondary">
+            <div class="card-body text-center">
+                <h5 class="card-title text-muted">Valore al 25%</h5>
+                <p class="fs-4 fw-bold mb-0">€ {{ valore_25|floatformat:2 }}</p>
+                <small>(Da Contattare, Contattato)</small>
             </div>
         </div>
     </div>
     <div class="col-md-4 mb-4">
-        <div class="card text-center text-white bg-info h-100">
-            <div class="card-body d-flex flex-column justify-content-center">
-                <h5 class="card-title">Valore Totale Vinto</h5>
-                <p class="display-4 mb-0">€ {{ valore_totale_vinto|floatformat:2 }}</p>
+        <div class="card h-100 shadow-sm border-top-warning">
+            <div class="card-body text-center">
+                <h5 class="card-title text-muted">Valore al 50%</h5>
+                <p class="fs-4 fw-bold mb-0">€ {{ valore_50|floatformat:2 }}</p>
+                <small>(Demo, Preventivo Tecnico)</small>
             </div>
         </div>
     </div>
     <div class="col-md-4 mb-4">
-        <div class="card text-center h-100">
-            <div class="card-body d-flex flex-column justify-content-center">
-                <h5 class="card-title">Trattative in Corso</h5>
-                <p class="display-4 mb-0">{{ trattative_in_corso }}</p>
-                <small class="text-muted mt-2">Valore: € {{ valore_in_corso|floatformat:2 }}</small>
+        <div class="card h-100 shadow-sm border-top-primary">
+            <div class="card-body text-center">
+                <h5 class="card-title text-muted">Valore al 75%</h5>
+                <p class="fs-4 fw-bold mb-0">€ {{ valore_75|floatformat:2 }}</p>
+                <small>(Preventivo Commerciale)</small>
             </div>
         </div>
     </div>
@@ -34,7 +68,7 @@
 
   <div class="row mt-4">
     <div class="col-md-6">
-      <div class="card">
+      <div class="card shadow-sm">
         <div class="card-body">
           <h5 class="card-title">Risultato Trattative (Vinte vs. Perse)</h5>
           <canvas id="winLossChart"></canvas>
@@ -45,6 +79,6 @@
 </div>
 
 <script>
-  //...
+  // Lo script del grafico non cambia
 </script>
 {% endblock %}
