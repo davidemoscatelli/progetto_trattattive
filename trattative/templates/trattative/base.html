@@ -12,17 +12,17 @@
 
     <style>
         body {
-            background-color: #f8f9fa; /* Un grigio molto chiaro per lo sfondo */
+            background-color: #f8f9fa; /* Grigio chiaro di sfondo */
         }
 
-        /* Stile per il nuovo pulsante flottante */
+        /* Pulsante flottante */
         .fab {
             position: fixed;
             width: 60px;
             height: 60px;
             bottom: 30px;
             right: 30px;
-            background-color: #0d6efd; /* Colore primario di Bootstrap */
+            background-color: #0d6efd; /* Primario Bootstrap */
             color: white;
             border-radius: 50%;
             text-align: center;
@@ -39,7 +39,8 @@
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom mb-4">
+    <!-- aggiunto sticky-top per tenerla ferma in alto -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom mb-4 sticky-top">
         <div class="container">
             <a class="navbar-brand" href="{% url 'homepage' %}">
                 <i class="fas fa-project-diagram me-2 text-primary"></i><strong>Gestione Trattative</strong>
