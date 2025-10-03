@@ -2,41 +2,109 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF--8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestione Trattative</title>
+    
     {% bootstrap_css %}
-    {% bootstrap_javascript %}
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+        body {
+            background-color: #f8f9fa; /* Un grigio molto chiaro per lo sfondo */
+        }
+
+        /* Stile per il nuovo pulsante flottante */
+        .fab {
+            position: fixed;
+            width: 60px;
+            height: 60px;
+            bottom: 30px;
+            right: 30px;
+            background-color: #0d6efd; /* Colore primario di Bootstrap */
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 28px;
+            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.25);
+            z-index: 1000;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .fab:hover {
+            transform: scale(1.05);
+            box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.35);
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{% url 'kanban_board' %}">Kanban Board</a>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'homepage' %}">
+                <i class="fas fa-project-diagram me-2 text-primary"></i><strong>Gestione Trattative</strong>
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'kpi_dashboard' %}">Dashboard KPI</a>
+                        <a class="nav-link" href="{% url 'kanban_board' %}">
+                            <i class="fas fa-columns me-2"></i>Kanban
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'kpi_dashboard' %}">
+                            <i class="fas fa-chart-line me-2"></i>Dashboard KPI
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'task_list' %}">
+                            <i class="fas fa-tasks me-2"></i>To-Do List
+                        </a>
                     </li>
                 </ul>
-                {% if user.is_authenticated %}
-                <span class="navbar-text text-white me-3">Ciao, {{ user.username }}</span>
-                <form action="{% url 'logout' %}" method="post">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-light">Logout</button>
-                </form>
-                {% endif %}
+
+                <div class="d-flex align-items-center">
+                    {% if user.is_authenticated %}
+                        <div class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user me-2"></i>{{ user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                <li><a class="dropdown-item" href="{% url 'profilo' %}"><i class="fas fa-id-card me-2"></i>Profilo</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form action="{% url 'logout' %}" method="post" class="text-center">
+                                        {% csrf_token %}
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt me-2"></i>Accedi
+                        </a>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </nav>
 
-    <main class="container-fluid">
+    <main class="container">
         {% block content %}{% endblock %}
     </main>
+
+    <a href="{% url 'trattativa_create' %}" class="fab d-flex align-items-center justify-content-center text-decoration-none">
+        <i class="fas fa-plus"></i>
+    </a>
+
+    {% bootstrap_javascript %}
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> </body>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>

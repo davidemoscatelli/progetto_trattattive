@@ -2,41 +2,92 @@
 
 {% block content %}
 <style>
-  .kanban-container { display: flex; overflow-x: auto; padding-bottom: 1rem; }
-  .kanban-column { min-width: 320px; margin: 0 10px; flex: 1; }
+  .kanban-container { 
+    display: flex; 
+    overflow-x: auto; 
+    padding-bottom: 1rem;
+    gap: 1.5rem;
+  }
+  
+  .kanban-column {
+    flex: 0 0 300px; 
+  }
+  
+  .kanban-column .card {
+    background-color: #e9ecef;
+    border: none;
+    border-radius: 0.5rem;
+    height: 100%;
+  }
 
-   @media (max-width: 768px) {
-    .kanban-container {
-      flex-direction: column; /* Impila le colonne verticalmente */
-      overflow-x: hidden; /* Nasconde lo scroll orizzontale */
-    }
-    .kanban-column {
-      min-width: 100%; /* Colonne a piena larghezza */
-      margin: 0 0 1rem 0; /* Aggiunge spazio sotto ogni colonna */
-    }
+  .kanban-column .card-header {
+    background-color: transparent;
+    border-bottom: 1px solid #dee2e6;
+    font-weight: 600;
+  }
+  
+  .kanban-card { 
+    cursor: grab; 
+    border: 1px solid #dee2e6;
+    border-left-width: 4px; /* Spessore del bordo */
+    transition: all 0.2s ease-in-out;
+    background-color: #ffffff;
+  }
+
+  /* Colori dinamici per il bordo */
+  .border-success { border-left-color: #198754 !important; }
+  .border-danger  { border-left-color: #dc3545 !important; }
+  .border-primary { border-left-color: #0d6efd !important; }
+
+
+  .kanban-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+
+  .kanban-container::-webkit-scrollbar { height: 8px; }
+  .kanban-container::-webkit-scrollbar-thumb { background: #ced4da; border-radius: 4px; }
+
+  @media (max-width: 768px) {
+    .kanban-container { flex-direction: column; overflow-x: hidden; gap: 1rem; }
+    .kanban-column { min-width: 100%; margin: 0; }
   }
 </style>
 
 <div class="kanban-container">
   {% for stato, trattative_list in kanban_data.items %}
   <div class="kanban-column">
-    <div class="card bg-light" id="colonna-{{ forloop.counter }}" data-stato="{{ stato }}">
+    <div class="card">
       <div class="card-header text-center">
-        <h5>{{ stato }} <span class="badge bg-secondary">{{ trattative_list.count }}</span></h5>
+        {{ stato }} <span class="badge bg-secondary rounded-pill">{{ trattative_list.count }}</span>
       </div>
-      <div class="card-body p-2 kanban-cards-container" style="min-height: 100px;">
+      <div class="card-body p-2 kanban-cards-container" style="min-height: 200px;">
+
         {% for trattativa in trattative_list %}
-        <div class="card shadow-sm mb-3" data-id="{{ trattativa.pk }}">
-          <div class="card-body">
-            <h6 class="card-title">{{ trattativa.titolo }}</h6>
-            <p class="card-text small mb-2">
-                <strong>Cliente:</strong> {{ trattativa.cliente }}<br>
-                <strong>Valore:</strong> € {{ trattativa.valore|floatformat:2 }}
-            </p>
-            <a href="{% url 'trattativa_update' trattativa.pk %}" class="btn btn-sm btn-outline-secondary">Modifica</a>
-          </div>
-        </div>
+            <div class="card shadow-sm mb-3 kanban-card 
+                {% if trattativa.stato == 'Vinta' %}
+                    border-success
+                {% elif trattativa.stato == 'Persa' %}
+                    border-danger
+                {% else %}
+                    border-primary
+                {% endif %}
+            " data-id="{{ trattativa.pk }}">
+              <div class="card-body">
+                <h6 class="card-title">{{ trattativa.titolo }}</h6>
+                <p class="card-text small mb-2 text-muted">
+                    <i class="fas fa-user-tie me-2"></i>{{ trattativa.cliente }}
+                </p>
+                <p class="card-text small fw-bold">
+                    <i class="fas fa-euro-sign me-2"></i>{{ trattativa.valore|floatformat:2 }}
+                </p>
+                <a href="{% url 'trattativa_detail' trattativa.pk %}" class="btn btn-sm btn-outline-secondary mt-2">
+                  <i class="fas fa-eye me-1"></i>Dettagli
+                </a>
+              </div>
+            </div>
         {% endfor %}
+
       </div>
     </div>
   </div>
@@ -46,38 +97,27 @@
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     const columns = document.querySelectorAll('.kanban-cards-container');
-    
     columns.forEach(column => {
       new Sortable(column, {
-        group: 'kanban', // Permette di spostare card tra colonne
+        group: 'kanban',
         animation: 150,
         onEnd: function (evt) {
-          const card = evt.item; // La card spostata
-          const toColumn = evt.to.closest('.card[data-stato]'); // La colonna di destinazione
-          
+          const card = evt.item;
+          const toColumnEl = evt.to.closest('.kanban-column');
+          const nuovoStato = toColumnEl.querySelector('.card-header').innerText.split(' ')[0];
           const trattativaId = card.dataset.id;
-          const nuovoStato = toColumn.dataset.stato;
           
-          // Invia i dati al server
           fetch("{% url 'update_trattativa_status' %}", {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               trattativa_id: trattativaId,
               nuovo_stato: nuovoStato,
             }),
           })
           .then(response => response.json())
-          .then(data => {
-            console.log('Success:', data);
-            // Qui potresti aggiungere una notifica di successo
-          })
-          .catch((error) => {
-            console.error('Error:', error);
-            // Qui potresti mostrare un errore e forse rimettere la card al suo posto
-          });
+          .then(data => console.log('Success:', data))
+          .catch((error) => console.error('Error:', error));
         },
       });
     });

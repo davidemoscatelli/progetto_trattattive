@@ -1,0 +1,53 @@
+{% extends "trattative/base.html" %}
+{% load bootstrap5 %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-7 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3>Dettaglio Trattativa</h3>
+                <a href="{% url 'trattativa_update' trattativa.pk %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-edit me-1"></i>Modifica
+                </a>
+            </div>
+            <div class="card-body">
+                <h4 class="card-title">{{ trattativa.titolo }}</h4>
+                <p><strong>Cliente:</strong> {{ trattativa.cliente }}</p>
+                <p><strong>Valore:</strong> € {{ trattativa.valore|floatformat:2 }}</p>
+                <p><strong>Stato:</strong> <span class="badge bg-primary">{{ trattativa.stato }}</span></p>
+                <p><strong>Responsabile:</strong> {{ trattativa.responsabile|default:"Non assegnato" }}</p>
+                <hr>
+                <h6>Note:</h6>
+                <p>{{ trattativa.note|linebreaks|default:"Nessuna nota." }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-5 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5><i class="fas fa-comments me-2"></i>Discussione</h5>
+            </div>
+            <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                {% for commento in commenti %}
+                    <div class="mb-3">
+                        <strong>{{ commento.autore.username }}</strong> 
+                        <small class="text-muted">{{ commento.data_creazione|date:"d/m/Y H:i" }}</small>
+                        <p class="bg-light p-2 rounded mb-1">{{ commento.testo|linebreaks }}</p>
+                    </div>
+                {% empty %}
+                    <p class="text-muted">Nessun commento. Inizia tu la conversazione!</p>
+                {% endfor %}
+            </div>
+            <div class="card-footer">
+                <form method="post">
+                    {% csrf_token %}
+                    {% bootstrap_form form %}
+                    <button type="submit" class="btn btn-primary w-100">Invia</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
